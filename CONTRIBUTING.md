@@ -3,11 +3,11 @@
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
 - [Contributing guidelines](#contributing-guidelines)
-  - [Sign the CLA](#sign-the-cla)
-  - [Contributing A Patch](#contributing-a-patch)
-  - [Issue and Pull Request Management](#issue-and-pull-request-management)
-  - [Pre-check before submitting a PR](#pre-check-before-submitting-a-pr)
-  - [Build and push images](#build-and-push-images)
+    - [Sign the CLA](#sign-the-cla)
+    - [Contributing A Patch](#contributing-a-patch)
+    - [Issue and Pull Request Management](#issue-and-pull-request-management)
+    - [Pre-check before submitting a PR](#pre-check-before-submitting-a-pr)
+    - [Build and push images](#build-and-push-images)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 

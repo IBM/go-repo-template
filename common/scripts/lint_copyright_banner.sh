@@ -1,5 +1,6 @@
-#!/usr/bin/env bash
-# Copyright 2017 The Kubernetes Authors.
+#!/bin/bash
+#
+# Copyright 2019 The Kubernetes Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,19 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -o errexit
-set -o nounset
-set -o pipefail
+set -e
 
-if ! which gofmt > /dev/null; then
-  echo "Can not find gofmt"
-  exit 1
-fi
+ec=0
+for fn in "$@"; do
+  if ! grep -L -q -e "Apache License, Version 2" "${fn}"; then
+    echo "Missing license: ${fn}"
+    ec=1
+  fi
 
-diff=$(find . -name "*.go" | grep -v "\/vendor\/" | xargs gofmt -s -d 2>&1)
-if [[ -n "${diff}" ]]; then
-  echo "${diff}"
-  echo
-  echo "Please run hack/update-gofmt.sh"
-  exit 1
-fi
+  if ! grep -L -q -e "Copyright" "${fn}"; then
+    echo "Missing copyright: ${fn}"
+    ec=1
+  fi
+done
+
+exit $ec
