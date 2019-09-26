@@ -1,7 +1,6 @@
-approvers:
-- gyliu513
-- morvencao
-
 reviewers:
 - clyang82
 - zxdiscovery
+approvers:
+- gyliu513
+- morvencao
