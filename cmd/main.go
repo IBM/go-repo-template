@@ -19,5 +19,5 @@ import (
 )
 
 func main() {
-	fmt.Println("helloooo...")
+	fmt.Println("hello, go-repo-template!")
 }
