@@ -37,7 +37,7 @@ endif
 
 include common/Makefile.common.mk
 
-all: test build images
+all: check test build images
 
 ############################################################
 # work section
