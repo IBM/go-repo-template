@@ -1,5 +1,6 @@
-#!/usr/bin/env bash
-# Copyright 2017 The Kubernetes Authors.
+#!/bin/bash
+#
+# Copyright 2019 The Kubernetes Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,16 +14,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -o errexit
-set -o nounset
-set -o pipefail
-
-CHANGED_FILES=`git diff --name-only master...${TRAVIS_COMMIT}`
-
-[[ -z CHANGED_FILES ]] && exit 1
-
-for CHANGED_FILE in $CHANGED_FILES; do
-    if ! [[ $CHANGED_FILE =~ .md$ ]]; then
-        exit 1
-    fi
-done
+GOGC=25 golangci-lint run -c ./common/config/.golangci.yml
