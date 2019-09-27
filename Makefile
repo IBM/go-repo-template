@@ -28,7 +28,7 @@ VERSION ?= $(shell git describe --exact-match 2> /dev/null || \
                  git describe --match=$(git rev-parse --short=8 HEAD) --always --dirty --abbrev=8)
 
 # Image URL to use all building/pushing image targets
-IMG ?= xxx
+IMG ?= go-repo-template
 REGISTRY ?= quay.io/multicloudlab
 
 ifneq ("$(realpath $(DEST))", "$(realpath $(PWD))")
@@ -69,7 +69,7 @@ test:
 ############################################################
 
 build:
-	@common/scripts/gobuild.sh xxx ./cmd
+	@common/scripts/gobuild.sh go-repo-template ./cmd
 
 ############################################################
 # images section
@@ -85,4 +85,4 @@ build-push-images: config-docker
 # clean section
 ############################################################
 clean:
-	rm -f xxx
+	rm -f go-repo-template
