@@ -1,4 +1,4 @@
 FROM scratch
 
-COPY xxx .
-CMD ["./xxx"]
+COPY go-repo-template .
+CMD ["./go-repo-template"]
