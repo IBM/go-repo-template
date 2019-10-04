@@ -27,7 +27,19 @@ DEST := $(GOPATH)/src/$(GIT_HOST)/$(BASE_DIR)
 VERSION ?= $(shell git describe --exact-match 2> /dev/null || \
                  git describe --match=$(git rev-parse --short=8 HEAD) --always --dirty --abbrev=8)
 
+LOCAL_OS := $(shell uname)
+ifeq ($(LOCAL_OS),Linux)
+   TARGET_OS ?= linux
+   XARGS_FLAGS="-r"
+else ifeq ($(LOCAL_OS),Darwin)
+   TARGET_OS ?= darwin
+   XARGS_FLAGS=""
+else
+   $(error "This system's OS $(LOCAL_OS) isn't recognized/supported")
+endif
+
 # Image URL to use all building/pushing image targets
+# Use your own docker registry and image name for dev/test by overridding the IMG and REGISTRY environment variable.
 IMG ?= go-repo-template
 REGISTRY ?= quay.io/multicloudlab
 

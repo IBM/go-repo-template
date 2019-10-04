@@ -31,7 +31,7 @@ config-docker: get-cluster-credentials
 	@common/scripts/config_docker.sh
 
 FINDFILES=find . \( -path ./.git -o -path ./.github \) -prune -o -type f
-XARGS = xargs -0 -r
+XARGS = xargs -0 ${XARGS_FLAGS}
 
 lint-dockerfiles:
 	@${FINDFILES} -name 'Dockerfile*' -print0 | ${XARGS} hadolint -c ./common/config/.hadolint.yml
