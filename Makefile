@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-GIT_HOST = github.com/IBM
+GIT_HOST ?= github.com/IBM
 PWD := $(shell pwd)
 BASE_DIR := $(shell basename $(PWD))
 
