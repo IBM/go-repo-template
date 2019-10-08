@@ -12,7 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This repo is build locally for dev/test by default;
+# Override this variable in CI env.
+BUILD_LOCALLY ?= 1
+
+# Image URL to use all building/pushing image targets;
+# Use your own docker registry and image name for dev/test by overridding the IMG and REGISTRY environment variable.
+IMG ?= go-repo-template
+REGISTRY ?= quay.io/multicloudlab
+
+# Github host to use for checking the source tree;
+# Override this variable ue with your own value if you're working on forked repo.
 GIT_HOST ?= github.com/IBM
+
 PWD := $(shell pwd)
 BASE_DIR := $(shell basename $(PWD))
 
@@ -29,27 +41,22 @@ VERSION ?= $(shell git describe --exact-match 2> /dev/null || \
 
 LOCAL_OS := $(shell uname)
 ifeq ($(LOCAL_OS),Linux)
-   TARGET_OS ?= linux
-   XARGS_FLAGS="-r"
+    TARGET_OS ?= linux
+    XARGS_FLAGS="-r"
 else ifeq ($(LOCAL_OS),Darwin)
-   TARGET_OS ?= darwin
-   XARGS_FLAGS=""
+    TARGET_OS ?= darwin
+    XARGS_FLAGS=""
 else
-   $(error "This system's OS $(LOCAL_OS) isn't recognized/supported")
+    $(error "This system's OS $(LOCAL_OS) isn't recognized/supported")
 endif
 
-# Image URL to use all building/pushing image targets
-# Use your own docker registry and image name for dev/test by overridding the IMG and REGISTRY environment variable.
-IMG ?= go-repo-template
-REGISTRY ?= quay.io/multicloudlab
-
 ifneq ("$(realpath $(DEST))", "$(realpath $(PWD))")
-	$(error Please run 'make' from $(DEST). Current directory is $(PWD))
+    $(error Please run 'make' from $(DEST). Current directory is $(PWD))
 endif
 
 include common/Makefile.common.mk
 
-all: check test build images
+all: fmt check test build images
 
 ############################################################
 # work section
@@ -61,12 +68,23 @@ $(GOBIN):
 work: $(GOBIN)
 
 ############################################################
-# check section
+# format section
 ############################################################
-check: fmt lint
 
+# All available format: format-go format-protos format-python
+# Default value will run all formats, override these make target with your requirements:
+#    eg: fmt: format-go format-protos
 fmt: format-go format-protos format-python
 
+############################################################
+# check section
+############################################################
+
+check: lint
+
+# All available linters: lint-dockerfiles lint-scripts lint-yaml lint-copyright-banner lint-go lint-python lint-helm lint-markdown lint-sass lint-typescript lint-protos
+# Default value will run all linters, override these make target with your requirements:
+#    eg: lint: lint-go lint-yaml
 lint: lint-all
 
 ############################################################
@@ -89,7 +107,11 @@ build:
 
 images: build build-push-images
 
-build-push-images: config-docker
+ifeq ($(BUILD_LOCALLY),0)
+    export CONFIG_DOCKER_TARGET = config-docker
+endif
+
+build-push-images: $(CONFIG_DOCKER_TARGET)
 	@docker build . -f Dockerfile -t $(REGISTRY)/$(IMG):$(VERSION)
 	@docker push $(REGISTRY)/$(IMG):$(VERSION)
 
