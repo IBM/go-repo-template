@@ -116,7 +116,9 @@ endif
 
 build-push-images: $(CONFIG_DOCKER_TARGET)
 	@docker build . -f Dockerfile -t $(REGISTRY)/$(IMG):$(VERSION)
+	@docker tag $(REGISTRY)/$(IMG):$(VERSION) $(REGISTRY)/$(IMG):latest
 	@docker push $(REGISTRY)/$(IMG):$(VERSION)
+	@docker push $(REGISTRY)/$(IMG):latest
 
 ############################################################
 # clean section
