@@ -45,10 +45,14 @@ ifeq ($(LOCAL_OS),Linux)
     XARGS_FLAGS="-r"
 else ifeq ($(LOCAL_OS),Darwin)
     TARGET_OS ?= darwin
-    XARGS_FLAGS=""
+    XARGS_FLAGS=
 else
     $(error "This system's OS $(LOCAL_OS) isn't recognized/supported")
 endif
+
+.PHONY: all work fmt check lint test build images build-push-images
+
+all: fmt check test build images
 
 ifneq ("$(realpath $(DEST))", "$(realpath $(PWD))")
     $(error Please run 'make' from $(DEST). Current directory is $(PWD))
@@ -56,7 +60,6 @@ endif
 
 include common/Makefile.common.mk
 
-all: fmt check test build images
 
 ############################################################
 # work section
