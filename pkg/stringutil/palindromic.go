@@ -15,23 +15,11 @@
 // Package stringutil contains utility functions for working with strings.
 package stringutil
 
-import (
-	"regexp"
-	"strings"
-)
-
 func IsPalindromic(input string) bool {
-    input = sanitize(input)
-    for i := 0; i < len(input)/2; i++ {
-        if input[i] != input[len(input)-i-1] {
-            return false
-        }
-    }
-    return true
-}
-
-func sanitize(value string) string {
-    reg, _ := regexp.Compile("[^A-Za-z0-9]+")
-    safe := reg.ReplaceAllString(value, "")
-    return strings.ToLower(strings.Trim(safe, ""))
+	for i := 0; i < len(input)/2; i++ {
+		if input[i] != input[len(input)-i-1] {
+			return false
+		}
+	}
+	return true
 }
