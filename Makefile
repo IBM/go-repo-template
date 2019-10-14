@@ -50,9 +50,9 @@ else
     $(error "This system's OS $(LOCAL_OS) isn't recognized/supported")
 endif
 
-.PHONY: all work fmt check lint test build images build-push-images
+.PHONY: all work fmt check coverage lint test build images build-push-images
 
-all: fmt check test build images
+all: fmt check test coverage build images
 
 ifneq ("$(realpath $(DEST))", "$(realpath $(PWD))")
     $(error Please run 'make' from $(DEST). Current directory is $(PWD))
@@ -96,6 +96,14 @@ lint: lint-all
 
 test:
 	@go test ${TESTARGS} ./...
+
+############################################################
+# coverage section
+############################################################
+
+coverage:
+	@common/scripts/codecov.sh
+
 
 ############################################################
 # build section
