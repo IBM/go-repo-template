@@ -21,5 +21,6 @@ func IsPalindromic(input string) bool {
 			return false
 		}
 	}
+
 	return true
 }
