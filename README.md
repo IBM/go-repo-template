@@ -40,7 +40,7 @@ You can reach the maintainers of this project at:
 
 ### Prerequisites
 
-xxx...
+Check the [Development Doc](docs/development.md) for how to contribute to the repo.
 
 ### XXXXX
 
