@@ -19,3 +19,4 @@
     - [tslint](https://github.com/palantir/tslint#installation--usage)
     - [prototool](https://github.com/uber/prototool/blob/dev/docs/install.md)
     - goimports - `go get -v golang.org/x/tools/cmd/goimports`
+- Setup GIT_HOST to override the setting for your custom path (e.g. github.com/<myaccount>)
