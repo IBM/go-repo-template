@@ -33,12 +33,12 @@ BUILD_GOARCH=${GOARCH:-amd64}
 GOBINARY=${GOBINARY:-go}
 BUILDINFO=${BUILDINFO:-""}
 STATIC=${STATIC:-1}
-LDFLAGS="-extldflags -static"
-GOBUILDFLAGS=${GOBUILDFLAGS:-""}
+GOBUILDFLAGS=${GOBUILDFLAGS:-}
+GCFLAGS=${GCFLAGS:-}
+LDFLAGS=${LDFLAGS:-"-extldflags -static"}
 # Split GOBUILDFLAGS by spaces into an array called GOBUILDFLAGS_ARRAY.
 IFS=' ' read -r -a GOBUILDFLAGS_ARRAY <<< "$GOBUILDFLAGS"
 
-GCFLAGS=${GCFLAGS:-}
 export CGO_ENABLED=0
 
 if [[ "${STATIC}" !=  "1" ]];then
