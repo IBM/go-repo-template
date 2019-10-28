@@ -5,16 +5,20 @@
 - git
 - go version v1.12+
 - Linting Tools
-    - [hadolint](https://github.com/hadolint/hadolint#install)
-    - [shellcheck](https://github.com/koalaman/shellcheck#installing)
-    - [yamllint](https://github.com/adrienverge/yamllint#installation)
-    - [helm client](https://helm.sh/docs/using_helm/#install-helm)
-    - [golangci-lint](https://github.com/golangci/golangci-lint#install)
-    - [autopep8](https://github.com/hhatto/autopep8#installation)
-    - [mdl](https://github.com/markdownlint/markdownlint#installation)
-    - [awesome_bot](https://github.com/dkhamsing/awesome_bot#installation)
-    - [sass-lint](https://github.com/sds/scss-lint#installation)
-    - [tslint](https://github.com/palantir/tslint#installation--usage)
-    - [prototool](https://github.com/uber/prototool/blob/dev/docs/install.md)
-    - goimports - `go get -v golang.org/x/tools/cmd/goimports`
+
+    | linting tool | version |
+    | ------------ | ------- |
+    | [hadolint](https://github.com/hadolint/hadolint#install) | [v1.17.2](https://github.com/hadolint/hadolint/releases/tag/v1.17.2) |
+    | [shellcheck](https://github.com/koalaman/shellcheck#installing) | [v0.7.0](https://github.com/koalaman/shellcheck/releases/tag/v0.7.0) |
+    | [yamllint](https://github.com/adrienverge/yamllint#installation) | [v1.17.0](https://github.com/adrienverge/yamllint/releases/tag/v1.17.0)
+    | [helm client](https://helm.sh/docs/using_helm/#install-helm) | [v2.10.0](https://github.com/helm/helm/releases/tag/v2.10.0) |
+    | [golangci-lint](https://github.com/golangci/golangci-lint#install) | [v1.18.0](https://github.com/golangci/golangci-lint/releases/tag/v1.18.0) |
+    | [autopep8](https://github.com/hhatto/autopep8#installation) | [v1.4.4](https://github.com/hhatto/autopep8/releases/tag/v1.4.4) |
+    | [mdl](https://github.com/markdownlint/markdownlint#installation) | [v0.5.0](https://github.com/markdownlint/markdownlint/releases/tag/v0.5.0) |
+    | [awesome_bot](https://github.com/dkhamsing/awesome_bot#installation) | [1.19.1](https://github.com/dkhamsing/awesome_bot/releases/tag/1.19.1) |
+    | [sass-lint](https://github.com/sasstools/sass-lint#install) | [v1.13.1](https://github.com/sasstools/sass-lint/releases/tag/v1.13.1) |
+    | [tslint](https://github.com/palantir/tslint#installation--usage) | [v5.18.0](https://github.com/palantir/tslint/releases/tag/5.18.0)
+    | [prototool](https://github.com/uber/prototool/blob/dev/docs/install.md) | `7df3b95` |
+    | [goimports](https://godoc.org/golang.org/x/tools/cmd/goimports) | `3792095` |
+
 - Setup GIT_HOST to override the setting for your custom path (e.g. github.com/<myaccount>)
