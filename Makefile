@@ -54,9 +54,9 @@ endif
 
 all: fmt check test coverage build images
 
-# ifneq ("$(realpath $(DEST))", "$(realpath $(PWD))")
-#     $(error Please run 'make' from $(DEST). Current directory is $(PWD))
-# endif
+ifneq ("$(realpath $(DEST))", "$(realpath $(PWD))")
+    $(error Please run 'make' from $(DEST). Current directory is $(PWD))
+endif
 
 include common/Makefile.common.mk
 
