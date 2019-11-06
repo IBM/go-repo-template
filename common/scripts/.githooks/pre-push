@@ -31,6 +31,5 @@ remote="$1"
 url="$2"
 
 .git/hooks/make_lint-all.sh
-.sh
 
 exit $?
