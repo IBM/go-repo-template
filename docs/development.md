@@ -23,17 +23,15 @@
 
 ## Developer quick start
 
-
-
 - Setup `GIT_HOST` to override the setting for your custom path.
 
-```
+```bash
 export GIT_HOST=github.com/<YOUR_GITHUB_ID>
 ```
 
 - Run the `linter` and `test` before building the binary.
 
-```
+```bash
 make check
 make test
 make build
@@ -41,7 +39,7 @@ make build
 
 - Build and push the docker image for local development.
 
-```
+```bash
 export IMG=<YOUR_CUSTOMIZED_IMAGE_NAME>
 export REGISTRY=<YOUR_CUSTOMIZED_IMAGE_REGISTRY>
 make build-push-images
