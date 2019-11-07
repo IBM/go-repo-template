@@ -21,4 +21,30 @@
     | [prototool](https://github.com/uber/prototool/blob/dev/docs/install.md) | `7df3b95` |
     | [goimports](https://godoc.org/golang.org/x/tools/cmd/goimports) | `3792095` |
 
-- Setup GIT_HOST to override the setting for your custom path (e.g. github.com/<myaccount>)
+## Developer quick start
+
+
+
+- Setup `GIT_HOST` to override the setting for your custom path.
+
+```
+export GIT_HOST=github.com/<YOUR_GITHUB_ID>
+```
+
+- Run the `linter` and `test` before building the binary.
+
+```
+make check
+make test
+make build
+```
+
+- Build and push the docker image for local development.
+
+```
+export IMG=<YOUR_CUSTOMIZED_IMAGE_NAME>
+export REGISTRY=<YOUR_CUSTOMIZED_IMAGE_REGISTRY>
+make build-push-images
+```
+
+> **Note:** You need to login the docker registry before running the command above.
