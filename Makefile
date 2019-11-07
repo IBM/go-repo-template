@@ -54,8 +54,10 @@ endif
 
 all: fmt check test coverage build images
 
+ifeq (,$(wildcard go.mod))
 ifneq ("$(realpath $(DEST))", "$(realpath $(PWD))")
     $(error Please run 'make' from $(DEST). Current directory is $(PWD))
+endif
 endif
 
 include common/Makefile.common.mk
