@@ -90,6 +90,7 @@ check: lint
 # All available linters: lint-dockerfiles lint-scripts lint-yaml lint-copyright-banner lint-go lint-python lint-helm lint-markdown lint-sass lint-typescript lint-protos
 # Default value will run all linters, override these make target with your requirements:
 #    eg: lint: lint-go lint-yaml
+# The MARKDOWN_LINT_WHITELIST variable can be set with comma separated urls you want to whitelist
 lint: lint-all
 
 ############################################################
