@@ -19,6 +19,12 @@ PROJECT ?= oceanic-guard-191815
 ZONE    ?= us-west1-a
 CLUSTER ?= prow
 
+############################################################
+# install git hooks
+############################################################
+INSTALL_HOOKS := $(shell find .git/hooks -type l -exec rm {} \; && \
+                         find common/scripts/.githooks -type f -exec ln -sf ../../{} .git/hooks/ \; )
+
 activate-serviceaccount:
 ifdef GOOGLE_APPLICATION_CREDENTIALS
 	gcloud auth activate-service-account --key-file="$(GOOGLE_APPLICATION_CREDENTIALS)"
@@ -33,13 +39,6 @@ config-docker: get-cluster-credentials
 FINDFILES=find . \( -path ./.git -o -path ./.github \) -prune -o -type f
 XARGS = xargs -0 ${XARGS_FLAGS}
 CLEANXARGS = xargs ${XARGS_FLAGS}
-
-############################################################
-# install git hooks
-############################################################
-init:
-	@find .git/hooks -type l -exec rm {} \;
-	@find common/scripts/.githooks -type f -exec ln -sf ../../{} .git/hooks/ \;
 
 lint-dockerfiles:
 	@${FINDFILES} -name 'Dockerfile*' -print0 | ${XARGS} hadolint -c ./common/config/.hadolint.yml
