@@ -1,39 +1,82 @@
-arch:
-  - amd64
-  - ppc64le
-  - s390x
-os:
-  - linux
+---
+dist: xenial
 
-# Only clone the most recent commit.
-git:
-  depth: 1
+services:
+  - docker
+
+cache: $TRAVIS_CACHE
 
 language: go
 
 go:
   - "1.12"
 
-branches:
-  only:
-    - master
-
 # Always set the project's Go import path to ensure that forked
 # builds get cloned to the correct location.
-go_import_path: sigs.k8s.io/cluster-api-provider-ibmcloud
+go_import_path: github.com/IBM/go-repo-template
 
-before_install:
-  - ls
+stages:
+  - check
+  - name: test
+    if: type = pull_request
+  - build
+  - name: deploy
+    # Only execute deploy stage if we are pushing to master
+    # as this pushes images to integration
+    if: type = push
 
-# Skip the install process; let pre-commit.sh do it.
-install: true
+install:
+  - export GOPROXY="https://proxy.golang.org"
+  - export BUILD_LOCALLY="2"
 
-before_script:
-  - ls
-
-script:
-  - ls
-
-# TBD. Suppressing for now.
-notifications:
-email: false
+jobs:
+  include:
+    - stage: check
+      name: Perform linting before any jobs trigger
+      script:
+        - make check
+    - stage: test
+      name: Test x86
+      os: linux
+      script:
+        - make test
+    - stage: test
+      name: Test ppc64le
+      os: linux-ppc64le
+      script:
+        - make test
+    - stage: test
+      name: Test s390x
+      os: linux-s390
+      script:
+        - make test
+    - stage: build
+      name: Build x86 binary
+      os: linux
+      script:
+        - make build
+    - stage: build
+      name: Build ppc64le binary
+      os: linux-ppc64le
+      script:
+        - make build
+    - stage: build
+      name: Build s390x binary
+      os: linux-s390
+      script:
+        - make build
+    - stage: deploy
+      name: Build and push x86 images
+      os: linux
+      script:
+        - make images
+    - stage: deploy
+      name: Build and push ppc64le images
+      os: linux-ppc64le
+      script:
+        - make images
+    - stage: deploy
+      name: Build and push s390x images
+      os: linux-s390
+      script:
+        - make images

@@ -50,6 +50,18 @@ else
     $(error "This system's OS $(LOCAL_OS) isn't recognized/supported")
 endif
 
+ARCH := $(shell uname -m)
+BUILD_ARCH := "amd64"
+ifeq ($(ARCH),x86_64)
+    BUILD_ARCH="amd64"
+else ifeq ($(ARCH),ppc64le)
+    BUILD_ARCH="ppc64le"
+else ifeq ($(ARCH),s390x)
+    BUILD_ARCH="s390x"
+else
+    $(error "This system's ARCH $(ARCH) isn't recognized/supported")
+endif
+
 .PHONY: all work fmt check coverage lint test build images build-push-images
 
 all: fmt check test coverage build images
@@ -125,11 +137,18 @@ ifeq ($(BUILD_LOCALLY),0)
     export CONFIG_DOCKER_TARGET = config-docker
 endif
 
+ifeq ($(BUILD_LOCALLY),2)
+    export CONFIG_DOCKER_TARGET = config-docker-for-travis
+endif
+
+config-docker-for-travis:
+	@docker login "$(REGISTRY)" -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}"
+
 build-push-images: $(CONFIG_DOCKER_TARGET)
-	@docker build . -f Dockerfile -t $(REGISTRY)/$(IMG):$(VERSION)
-	@docker tag $(REGISTRY)/$(IMG):$(VERSION) $(REGISTRY)/$(IMG):latest
-	@docker push $(REGISTRY)/$(IMG):$(VERSION)
-	@docker push $(REGISTRY)/$(IMG):latest
+	@docker build . -f Dockerfile -t $(REGISTRY)/$(IMG)-$(BUILD_ARCH):$(VERSION)
+	@docker tag $(REGISTRY)/$(IMG)-$(BUILD_ARCH):$(VERSION) $(REGISTRY)/$(IMG)-$(BUILD_ARCH):latest
+	@docker push $(REGISTRY)/$(IMG)-$(BUILD_ARCH):$(VERSION)
+	@docker push $(REGISTRY)/$(IMG)-$(BUILD_ARCH):latest
 
 ############################################################
 # clean section
