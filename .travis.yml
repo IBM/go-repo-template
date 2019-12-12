@@ -34,7 +34,7 @@ jobs:
     - stage: check
       name: Perform linting before any jobs trigger
       script:
-        - make check
+        - make lint-go
     - stage: test
       name: Test x86
       os: linux
