@@ -5,9 +5,8 @@ arch:
 os:
   - linux
 
-# Only clone the most recent commit.
-# git:
-#   depth: 1
+services:
+  - docker
 
 language: go
 
@@ -22,20 +21,28 @@ go:
 # builds get cloned to the correct location.
 go_import_path: github.com/IBM/go-repo-template
 
-before_install:
-  - ls
+env:
+  global:
+    - GO111MODULE=on
+    - GOPROXY=https://proxy.golang.org
+    - GOLANGCI_LINT_VERSION=v1.18.0
 
-# Skip the install process; let pre-commit.sh do it.
-install: true
-
-before_script:
-  - export GOPROXY="https://proxy.golang.org"
-  - export BUILD_LOCALLY="2"
+install:
+  - |
+    # Golangci-lint
+    go get github.com/golangci/golangci-lint/cmd/golangci-lint@${GOLANGCI_LINT_VERSION}
 
 script:
-  - make test
-  - make build
-  - make images
+  - |
+    make lint-go
+    make test
+    if [[ "$TRAVIS_EVENT_TYPE" != "pull_request" ]]; then
+      make build
+      make images
+    fi
+
+after_script:
+  - make clean
 
 # TBD. Suppressing for now.
 notifications:
