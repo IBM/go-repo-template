@@ -1,21 +1,15 @@
-arch:
-  - amd64
-  - ppc64le
-  - s390x
-os:
-  - linux
+---
+dist: xenial
 
 services:
   - docker
+
+cache: $TRAVIS_CACHE
 
 language: go
 
 go:
   - "1.12"
-
-# branches:
-#   only:
-#     - master
 
 # Always set the project's Go import path to ensure that forked
 # builds get cloned to the correct location.
@@ -27,22 +21,88 @@ env:
     - GOPROXY=https://proxy.golang.org
     - GOLANGCI_LINT_VERSION=v1.18.0
 
+# Only build on master, stable branches
+# don't need to build on tags anymore since cicd process will promote master to stable
+branches:
+  only:
+    - master
+
+stages:
+  - lint
+  - name: test
+    if: type = pull_request
+  - build
+  - name: deploy
+    # Only execute deploy stage if we are pushing to master
+    # as this pushes images to integration
+    if: type = push
+
 install:
-  - |
-    # Golangci-lint
-    go get github.com/golangci/golangci-lint/cmd/golangci-lint@${GOLANGCI_LINT_VERSION}
+  - go get github.com/golangci/golangci-lint/cmd/golangci-lint@${GOLANGCI_LINT_VERSION}
 
-script:
-  - |
-    make lint-go
-    make test
-    if [[ "$TRAVIS_EVENT_TYPE" != "pull_request" ]]; then
-      make build
-      make images
-    fi
+jobs:
+  include:
+    - stage: lint
+      name: Perform linting before any jobs trigger
+      script:
+        - make lint-go
 
-after_script:
-  - make clean
+    - stage: test
+      name: Test x86 source
+      os: linux
+      arch: amd64
+      script:
+        - make test
+    - stage: test
+      name: Test ppc64le source
+      os: linux
+      arch: ppc64le
+      script:
+        - make test
+    - stage: test
+      name: Test s390x source
+      os: linux
+      arch: s390x
+      script:
+        - make test
+
+    - stage: build
+      name: Build x86 binary
+      os: linux
+      arch: amd64
+      script:
+        - make build
+    - stage: build
+      name: Build ppc64le binary
+      os: linux
+      arch: ppc64le
+      script:
+        - make build
+    - stage: build
+      name: Build s390x binary
+      os: linux
+      arch: s390x
+      script:
+        - make build
+
+    - stage: deploy
+      name: Build and push x86 images
+      os: linux
+      arch: amd64
+      script:
+        - make images
+    - stage: deploy
+      name: Build and push ppc64le images
+      os: linux
+      arch: ppc64le
+      script:
+        - make images
+    - stage: deploy
+      name: Build and push s390x images
+      os: linux
+      arch: s390x
+      script:
+        - make images
 
 # TBD. Suppressing for now.
 notifications:
