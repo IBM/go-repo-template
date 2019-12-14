@@ -12,9 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This repo is build locally for dev/test by default;
-# Override this variable in CI env.
+# Specify whether this repo is build locally or not, default values is '1';
+# If set to 1, then you need to also set 'DOCKER_USERNAME' and 'DOCKER_PASSWORD'
+# environment variables before build the repo.
 BUILD_LOCALLY ?= 1
+
+DOCKER_USERNAME ?= ${DOCKER_USERNAME}
+DOCKER_PASSWORD ?= ${DOCKER_PASSWORD}
 
 # Image URL to use all building/pushing image targets;
 # Use your own docker registry and image name for dev/test by overridding the IMG and REGISTRY environment variable.
@@ -48,6 +52,18 @@ else ifeq ($(LOCAL_OS),Darwin)
     XARGS_FLAGS=
 else
     $(error "This system's OS $(LOCAL_OS) isn't recognized/supported")
+endif
+
+ARCH := $(shell uname -m)
+BUILD_ARCH := "amd64"
+ifeq ($(ARCH),x86_64)
+    BUILD_ARCH="amd64"
+else ifeq ($(ARCH),ppc64le)
+    BUILD_ARCH="ppc64le"
+else ifeq ($(ARCH),s390x)
+    BUILD_ARCH="s390x"
+else
+    $(error "This system's ARCH $(ARCH) isn't recognized/supported")
 endif
 
 .PHONY: all work fmt check coverage lint test build images build-push-images
@@ -121,18 +137,18 @@ build:
 
 images: build build-push-images
 
-ifeq ($(BUILD_LOCALLY),0)
-    export CONFIG_DOCKER_TARGET = config-docker
-endif
+config-docker:
+	@docker login "$(REGISTRY)" -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}"
 
-build-push-images: $(CONFIG_DOCKER_TARGET)
-	@docker build . -f Dockerfile -t $(REGISTRY)/$(IMG):$(VERSION)
-	@docker tag $(REGISTRY)/$(IMG):$(VERSION) $(REGISTRY)/$(IMG):latest
-	@docker push $(REGISTRY)/$(IMG):$(VERSION)
-	@docker push $(REGISTRY)/$(IMG):latest
+build-push-images: config-docker
+	@docker build . -f Dockerfile -t $(REGISTRY)/$(IMG)-$(BUILD_ARCH):$(VERSION)
+	@docker tag $(REGISTRY)/$(IMG)-$(BUILD_ARCH):$(VERSION) $(REGISTRY)/$(IMG)-$(BUILD_ARCH):latest
+	@docker push $(REGISTRY)/$(IMG)-$(BUILD_ARCH):$(VERSION)
+	@docker push $(REGISTRY)/$(IMG)-$(BUILD_ARCH):latest
+	@docker logout "$(REGISTRY)"
 
 ############################################################
 # clean section
 ############################################################
 clean:
-	rm -f go-repo-template
+	@rm -f go-repo-template

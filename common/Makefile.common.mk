@@ -25,17 +25,6 @@ CLUSTER ?= prow
 INSTALL_HOOKS := $(shell find .git/hooks -type l -exec rm {} \; && \
                          find common/scripts/.githooks -type f -exec ln -sf ../../{} .git/hooks/ \; )
 
-activate-serviceaccount:
-ifdef GOOGLE_APPLICATION_CREDENTIALS
-	gcloud auth activate-service-account --key-file="$(GOOGLE_APPLICATION_CREDENTIALS)"
-endif
-
-get-cluster-credentials: activate-serviceaccount
-	gcloud container clusters get-credentials "$(CLUSTER)" --project="$(PROJECT)" --zone="$(ZONE)"
-
-config-docker: get-cluster-credentials
-	@common/scripts/config_docker.sh
-
 FINDFILES=find . \( -path ./.git -o -path ./.github \) -prune -o -type f
 XARGS = xargs -0 ${XARGS_FLAGS}
 CLEANXARGS = xargs ${XARGS_FLAGS}
