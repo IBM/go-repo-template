@@ -12,11 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Specify whether this repo is build locally or not, default values is '1';
-# If set to 1, then you need to also set 'DOCKER_USERNAME' and 'DOCKER_PASSWORD'
-# environment variables before build the repo.
-BUILD_LOCALLY ?= 1
-
 DOCKER_USERNAME ?= ${DOCKER_USERNAME}
 DOCKER_PASSWORD ?= ${DOCKER_PASSWORD}
 
@@ -121,8 +116,7 @@ test:
 ############################################################
 
 coverage:
-	@common/scripts/codecov.sh ${BUILD_LOCALLY}
-
+	@common/scripts/codecov.sh
 
 ############################################################
 # build section

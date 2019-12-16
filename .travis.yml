@@ -32,6 +32,10 @@ stages:
   - name: test
     if: type = pull_request
   - build
+  - name: coverage
+    # Only execute deploy stage if we are pushing to master
+    # as this pushes images to integration
+    if: type = push
   - name: deploy
     # Only execute deploy stage if we are pushing to master
     # as this pushes images to integration
@@ -84,6 +88,11 @@ jobs:
       arch: s390x
       script:
         - make build
+
+    - stage: coverage
+      name: Run the coverage after merge
+      script:
+        - make coverage
 
     - stage: deploy
       name: Build and push x86 images
