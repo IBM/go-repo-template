@@ -20,6 +20,14 @@ env:
     - GO111MODULE=on
     - GOPROXY=https://proxy.golang.org
     - GOLANGCI_LINT_VERSION=v1.18.0
+    - HELM_VERSION=v2.10.0
+    - HADOLINT_VERSION=v1.17.2
+    - SHELLCHECK_VERSION=v0.7.0
+    - AUTOPEP8_VERSION=1.4.4
+    - YAMLLINT_VERSION=1.17.0
+    - AWESOMEBOT_VERSION=1.19.1
+    - HTMLPROOFER_VERSION=3.9.2
+    - MDL_VERSION=0.5.0
 
 # Only build on master, stable branches
 # don't need to build on tags anymore since cicd process will promote master to stable
@@ -43,13 +51,19 @@ stages:
 
 install:
   - go get github.com/golangci/golangci-lint/cmd/golangci-lint@${GOLANGCI_LINT_VERSION}
+  - curl -LO https://storage.googleapis.com/kubernetes-helm/helm-${HELM_VERSION}-linux-amd64.tar.gz && tar -xf helm-${HELM_VERSION}-linux-amd64.tar.gz -C /tmp && mv /tmp/linux-amd64/helm /usr/local/bin
+  - curl -L https://github.com/hadolint/hadolint/releases/download/${HADOLINT_VERSION}/hadolint-Linux-x86_64 -o /usr/local/bin/hadolint && chmod 555 /usr/local/bin/hadolint
+  - curl -LO https://storage.googleapis.com/shellcheck/shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz && tar -xJf shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz -C /tmp && mv /tmp/shellcheck-${SHELLCHECK_VERSION}/shellcheck /usr/local/bin
+  - apt-get update && apt-get install -y --no-install-recommends python3-pip ruby-full
+  - pip install autopep8==${AUTOPEP8_VERSION} && pip install yamllint==${YAMLLINT_VERSION}
+  - gem install --no-wrappers --no-document mdl -v ${MDL_VERSION} && gem install --no-wrappers --no-document html-proofer -v ${HTMLPROOFER_VERSION} && gem install --no-wrappers --no-document awesome_bot -v ${AWESOMEBOT_VERSION}
 
 jobs:
   include:
     - stage: lint
       name: Perform linting before any jobs trigger
       script:
-        - make lint-go
+        - make lint
 
     - stage: test
       name: Test x86 source
