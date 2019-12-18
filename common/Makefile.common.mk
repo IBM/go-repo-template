@@ -13,17 +13,14 @@
 # limitations under the License.
 
 ############################################################
-# GKE section
-############################################################
-PROJECT ?= oceanic-guard-191815
-ZONE    ?= us-west1-a
-CLUSTER ?= prow
-
-############################################################
 # install git hooks
 ############################################################
 INSTALL_HOOKS := $(shell find .git/hooks -type l -exec rm {} \; && \
                          find common/scripts/.githooks -type f -exec ln -sf ../../{} .git/hooks/ \; )
+
+############################################################
+# lint section
+############################################################
 
 FINDFILES=find . \( -path ./.git -o -path ./.github \) -prune -o -type f
 XARGS = xargs -0 ${XARGS_FLAGS}
@@ -80,3 +77,23 @@ lint-all: lint-dockerfiles lint-scripts lint-yaml lint-helm lint-copyright-banne
 # 	@$(FINDFILES) -name '*.proto' -print0 | $(XARGS) -L 1 prototool format -w
 
 .PHONY: lint-dockerfiles lint-scripts lint-yaml lint-helm lint-copyright-banner lint-go lint-python lint-markdown lint-all
+
+############################################################
+# multiarch image section
+############################################################
+ARCH := $(shell uname -m)
+
+DEFAULT_S390X_IMAGE ?= ibmcom/pause-s390x:3.0
+IMAGE_NAME_S390X ?= ${IMAGE_REPO}/${IMAGE_NAME}-s390x:${RELEASE_TAG}
+
+.PHONY: s390x-fix
+s390x-fix:
+	manifest-tool inspect $(IMAGE_NAME_S390X) \
+		|| (docker pull $(DEFAULT_S390X_IMAGE) \
+		&& docker tag $(DEFAULT_S390X_IMAGE) $(IMAGE_NAME_S390X) \
+		&& docker push $(IMAGE_NAME_S390X))
+
+multi-arch: s390x-fix
+	cp ./common/manifest.yaml /tmp/manifest.yaml
+	sed -i -e "s|__RELEASE_TAG__|$(RELEASE_TAG)|g" -e "s|__IMAGE_NAME__|$(IMAGE_NAME)|g" -e "s|__IMAGE_REPO__|$(IMAGE_REPO)|g" /tmp/manifest.yaml
+	manifest-tool push from-spec /tmp/manifest.yaml
