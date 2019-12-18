@@ -86,14 +86,24 @@ ARCH := $(shell uname -m)
 DEFAULT_S390X_IMAGE ?= ibmcom/pause-s390x:3.0
 IMAGE_NAME_S390X ?= ${IMAGE_REPO}/${IMAGE_NAME}-s390x:${RELEASE_TAG}
 
+.PHONY: manifest-tool
+manifest-tool:
+ifeq ($(ARCH), x86_64)
+	$(eval MANIFEST_TOOL_NAME = manifest-tool-linux-amd64)
+else
+	$(eval MANIFEST_TOOL_NAME = manifest-tool-linux-$(ARCH))
+endif
+	sudo curl -sSL -o /usr/local/bin/manifest-tool https://github.com/estesp/manifest-tool/releases/download/${MANIFEST_VERSION}/${MANIFEST_TOOL_NAME}
+	sudo chmod +x /usr/local/bin/manifest-tool
+
 .PHONY: s390x-fix
-s390x-fix:
-	manifest-tool inspect $(IMAGE_NAME_S390X) \
+s390x-fix: manifest-tool
+	@sudo manifest-tool inspect $(IMAGE_NAME_S390X) \
 		|| (docker pull $(DEFAULT_S390X_IMAGE) \
 		&& docker tag $(DEFAULT_S390X_IMAGE) $(IMAGE_NAME_S390X) \
 		&& docker push $(IMAGE_NAME_S390X))
 
 multi-arch: s390x-fix
-	cp ./common/manifest.yaml /tmp/manifest.yaml
-	sed -i -e "s|__RELEASE_TAG__|$(RELEASE_TAG)|g" -e "s|__IMAGE_NAME__|$(IMAGE_NAME)|g" -e "s|__IMAGE_REPO__|$(IMAGE_REPO)|g" /tmp/manifest.yaml
-	manifest-tool push from-spec /tmp/manifest.yaml
+	@cp ./common/manifest.yaml /tmp/manifest.yaml
+	@sed -i -e "s|__RELEASE_TAG__|$(RELEASE_TAG)|g" -e "s|__IMAGE_NAME__|$(IMAGE_NAME)|g" -e "s|__IMAGE_REPO__|$(IMAGE_REPO)|g" /tmp/manifest.yaml
+	@sudo manifest-tool push from-spec /tmp/manifest.yaml

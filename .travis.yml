@@ -133,8 +133,7 @@ jobs:
     - stage: multiarch-image
       name: Run the multiarch-image after merge
       script:
-        - curl -L https://github.com/estesp/manifest-tool/releases/download/${MANIFEST_VERSION}/manifest-tool-linux-amd64 -o ${HOME}/bin/manifest-tool && chmod +x ${HOME}/bin/manifest-tool
-        - sudo make multiarch-image
+        - make multiarch-image
 
 # TBD. Suppressing for now.
 notifications:
