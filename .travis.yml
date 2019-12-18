@@ -29,6 +29,7 @@ env:
     - AWESOMEBOT_VERSION=1.19.1
     - HTMLPROOFER_VERSION=3.9.2
     - MDL_VERSION=0.5.0
+    - MANIFEST_VERSION=v1.0.0
 
 # Only build on master, stable branches
 # don't need to build on tags anymore since cicd process will promote master to stable
@@ -42,22 +43,26 @@ stages:
     if: type = pull_request
   - build
   - name: coverage
-    # Only execute deploy stage if we are pushing to master
-    # as this pushes images to integration
+    # Only execute coverage stage if we are pushing to master
     if: type = push
-  - name: deploy
-    # Only execute deploy stage if we are pushing to master
-    # as this pushes images to integration
+  - name: image
+    # Only execute image stage if we are pushing to master
+    # as this pushes image to docker registry
+    if: type = push
+  - name: multiarch-image
+    # Only execute multiarch-image stage if we are pushing to master
+    # as this builds and pushes multiarch image to docker registry
     if: type = push
 
 install:
   - go get github.com/golangci/golangci-lint/cmd/golangci-lint@${GOLANGCI_LINT_VERSION}
   - curl -LO https://storage.googleapis.com/kubernetes-helm/helm-${HELM_VERSION}-linux-amd64.tar.gz && tar -xf helm-${HELM_VERSION}-linux-amd64.tar.gz -C /tmp && mv /tmp/linux-amd64/helm ${HOME}/bin
-  - curl -L https://github.com/hadolint/hadolint/releases/download/${HADOLINT_VERSION}/hadolint-Linux-x86_64 -o ${HOME}/bin/hadolint && chmod 555 ${HOME}/bin/hadolint
+  - curl -L https://github.com/hadolint/hadolint/releases/download/${HADOLINT_VERSION}/hadolint-Linux-x86_64 -o ${HOME}/bin/hadolint && chmod +x ${HOME}/bin/hadolint
   - curl -LO https://storage.googleapis.com/shellcheck/shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz && tar -xJf shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz -C /tmp && mv /tmp/shellcheck-${SHELLCHECK_VERSION}/shellcheck ${HOME}/bin
   - sudo apt-get update && sudo apt-get install -y --no-install-recommends python3-pip ruby-full
   - sudo pip install autopep8==${AUTOPEP8_VERSION} && sudo pip install yamllint==${YAMLLINT_VERSION}
   - sudo gem install --no-wrappers --no-document mdl -v ${MDL_VERSION} && sudo gem install --no-wrappers --no-document html-proofer -v ${HTMLPROOFER_VERSION} && sudo gem install --no-wrappers --no-document awesome_bot -v ${AWESOMEBOT_VERSION}
+  - curl -L https://github.com/estesp/manifest-tool/releases/download/$(MANIFEST_VERSION)/manifest-tool-linux-amd64 -o ${HOME}/bin/manifest-tool && chmod +x ${HOME}/bin/manifest-tool
 
 jobs:
   include:
@@ -109,24 +114,29 @@ jobs:
       script:
         - make coverage
 
-    - stage: deploy
-      name: Build and push x86 images
+    - stage: image
+      name: Build and push x86 image
       os: linux
       arch: amd64
       script:
-        - make images
-    - stage: deploy
-      name: Build and push ppc64le images
+        - make image
+    - stage: image
+      name: Build and push ppc64le image
       os: linux
       arch: ppc64le
       script:
-        - make images
-    - stage: deploy
-      name: Build and push s390x images
+        - make image
+    - stage: image
+      name: Build and push s390x image
       os: linux
       arch: s390x
       script:
-        - make images
+        - make image
+
+    - stage: multiarch-image
+      name: Run the multiarch-image after merge
+      script:
+        - make multiarch-image
 
 # TBD. Suppressing for now.
 notifications:

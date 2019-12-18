@@ -16,9 +16,10 @@ DOCKER_USERNAME ?= ${DOCKER_USERNAME}
 DOCKER_PASSWORD ?= ${DOCKER_PASSWORD}
 
 # Image URL to use all building/pushing image targets;
-# Use your own docker registry and image name for dev/test by overridding the IMG and REGISTRY environment variable.
-IMG ?= go-repo-template
-REGISTRY ?= quay.io/multicloudlab
+# Use your own docker registry and image name for dev/test by overridding the
+# IMAGE_REPO, IMAGE_NAME and RELEASE_TAG environment variable.
+IMAGE_REPO ?= quay.io/multicloudlab
+IMAGE_NAME ?= go-repo-template
 
 # Github host to use for checking the source tree;
 # Override this variable ue with your own value if you're working on forked repo.
@@ -35,7 +36,7 @@ export GOBIN ?= $(GOBIN_DEFAULT)
 TESTARGS_DEFAULT := "-v"
 export TESTARGS ?= $(TESTARGS_DEFAULT)
 DEST := $(GOPATH)/src/$(GIT_HOST)/$(BASE_DIR)
-VERSION ?= $(shell git describe --exact-match 2> /dev/null || \
+RELEASE_TAG ?= $(shell git describe --exact-match 2> /dev/null || \
                  git describe --match=$(git rev-parse --short=8 HEAD) --always --dirty --abbrev=8)
 
 LOCAL_OS := $(shell uname)
@@ -61,9 +62,9 @@ else
     $(error "This system's ARCH $(ARCH) isn't recognized/supported")
 endif
 
-.PHONY: all work fmt check coverage lint test build images build-push-images
+.PHONY: all work fmt check coverage lint test build image build-push-image multiarch-image clean
 
-all: fmt check test coverage build images
+all: fmt check test coverage build image
 
 ifeq (,$(wildcard go.mod))
 ifneq ("$(realpath $(DEST))", "$(realpath $(PWD))")
@@ -126,20 +127,26 @@ build:
 	@common/scripts/gobuild.sh go-repo-template ./cmd
 
 ############################################################
-# images section
+# image section
 ############################################################
 
-images: build build-push-images
+image: build build-push-image
 
 config-docker:
-	@docker login "$(REGISTRY)" -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}"
+	@docker login "$(IMAGE_REPO)" -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}"
 
-build-push-images: config-docker
-	@docker build . -f Dockerfile -t $(REGISTRY)/$(IMG)-$(BUILD_ARCH):$(VERSION)
-	@docker tag $(REGISTRY)/$(IMG)-$(BUILD_ARCH):$(VERSION) $(REGISTRY)/$(IMG)-$(BUILD_ARCH):latest
-	@docker push $(REGISTRY)/$(IMG)-$(BUILD_ARCH):$(VERSION)
-	@docker push $(REGISTRY)/$(IMG)-$(BUILD_ARCH):latest
-	@docker logout "$(REGISTRY)"
+build-push-image: config-docker
+	@docker build . -f Dockerfile -t $(IMAGE_REPO)/$(IMAGE_NAME)-$(BUILD_ARCH):$(RELEASE_TAG)
+	@docker tag $(IMAGE_REPO)/$(IMAGE_NAME)-$(BUILD_ARCH):$(RELEASE_TAG) $(IMAGE_REPO)/$(IMAGE_NAME)-$(BUILD_ARCH):latest
+	@docker push $(IMAGE_REPO)/$(IMAGE_NAME)-$(BUILD_ARCH):$(RELEASE_TAG)
+	@docker push $(IMAGE_REPO)/$(IMAGE_NAME)-$(BUILD_ARCH):latest
+	@docker logout "$(IMAGE_REPO)"
+
+############################################################
+# multiarch-image section
+############################################################
+
+multiarch-image: config-docker multi-arch
 
 ############################################################
 # clean section
