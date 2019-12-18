@@ -54,21 +54,18 @@ stages:
     # as this builds and pushes multiarch image to docker registry
     if: type = push
 
-install:
-  - go get github.com/golangci/golangci-lint/cmd/golangci-lint@${GOLANGCI_LINT_VERSION}
-  - curl -LO https://storage.googleapis.com/kubernetes-helm/helm-${HELM_VERSION}-linux-amd64.tar.gz && tar -xf helm-${HELM_VERSION}-linux-amd64.tar.gz -C /tmp && mv /tmp/linux-amd64/helm ${HOME}/bin
-  - curl -L https://github.com/hadolint/hadolint/releases/download/${HADOLINT_VERSION}/hadolint-Linux-x86_64 -o ${HOME}/bin/hadolint && chmod +x ${HOME}/bin/hadolint
-  - curl -LO https://storage.googleapis.com/shellcheck/shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz && tar -xJf shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz -C /tmp && mv /tmp/shellcheck-${SHELLCHECK_VERSION}/shellcheck ${HOME}/bin
-  - sudo apt-get update && sudo apt-get install -y --no-install-recommends python3-pip ruby-full
-  - sudo pip install autopep8==${AUTOPEP8_VERSION} && sudo pip install yamllint==${YAMLLINT_VERSION}
-  - sudo gem install --no-wrappers --no-document mdl -v ${MDL_VERSION} && sudo gem install --no-wrappers --no-document html-proofer -v ${HTMLPROOFER_VERSION} && sudo gem install --no-wrappers --no-document awesome_bot -v ${AWESOMEBOT_VERSION}
-  - curl -L https://github.com/estesp/manifest-tool/releases/download/$(MANIFEST_VERSION)/manifest-tool-linux-amd64 -o ${HOME}/bin/manifest-tool && chmod +x ${HOME}/bin/manifest-tool
-
 jobs:
   include:
     - stage: lint
       name: Perform linting before any jobs trigger
       script:
+        - go get github.com/golangci/golangci-lint/cmd/golangci-lint@${GOLANGCI_LINT_VERSION}
+        - curl -LO https://storage.googleapis.com/kubernetes-helm/helm-${HELM_VERSION}-linux-amd64.tar.gz && tar -xf helm-${HELM_VERSION}-linux-amd64.tar.gz -C /tmp && mv /tmp/linux-amd64/helm ${HOME}/bin
+        - curl -L https://github.com/hadolint/hadolint/releases/download/${HADOLINT_VERSION}/hadolint-Linux-x86_64 -o ${HOME}/bin/hadolint && chmod +x ${HOME}/bin/hadolint
+        - curl -LO https://storage.googleapis.com/shellcheck/shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz && tar -xJf shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz -C /tmp && mv /tmp/shellcheck-${SHELLCHECK_VERSION}/shellcheck ${HOME}/bin
+        - sudo apt-get update && sudo apt-get install -y --no-install-recommends python3-pip ruby-full
+        - sudo pip install autopep8==${AUTOPEP8_VERSION} && sudo pip install yamllint==${YAMLLINT_VERSION}
+        - sudo gem install --no-wrappers --no-document mdl -v ${MDL_VERSION} && sudo gem install --no-wrappers --no-document html-proofer -v ${HTMLPROOFER_VERSION} && sudo gem install --no-wrappers --no-document awesome_bot -v ${AWESOMEBOT_VERSION}
         - make lint
 
     - stage: test
@@ -136,6 +133,7 @@ jobs:
     - stage: multiarch-image
       name: Run the multiarch-image after merge
       script:
+        - curl -L https://github.com/estesp/manifest-tool/releases/download/${MANIFEST_VERSION}/manifest-tool-linux-amd64 -o ${HOME}/bin/manifest-tool && chmod +x ${HOME}/bin/manifest-tool
         - make multiarch-image
 
 # TBD. Suppressing for now.
