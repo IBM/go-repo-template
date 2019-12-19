@@ -49,10 +49,12 @@ stages:
     # Only execute image stage if we are pushing to master
     # as this pushes image to docker registry
     if: type = push
-  - name: multiarch-image
-    # Only execute multiarch-image stage if we are pushing to master
-    # as this builds and pushes multiarch image to docker registry
-    if: type = push
+  # TODO: re-enable multiarch-image build and push to quay.io 
+  # after https://github.com/moby/buildkit/issues/409 is fixed
+  # - name: multiarch-image
+  #   # Only execute multiarch-image stage if we are pushing to master
+  #   # as this builds and pushes multiarch image to docker registry
+  #   if: type = push
 
 jobs:
   include:
@@ -130,10 +132,10 @@ jobs:
       script:
         - make image
 
-    - stage: multiarch-image
-      name: Run the multiarch-image after merge
-      script:
-        - make multiarch-image
+    # - stage: multiarch-image
+    #   name: Run the multiarch-image after merge
+    #   script:
+    #     - make multiarch-image
 
 # TBD. Suppressing for now.
 notifications:
