@@ -38,10 +38,11 @@ branches:
     - master
 
 stages:
-  - lint
+  - name: lint
+    if: type = pull_request
+  - name: build
   - name: test
     if: type = pull_request
-  - build
   - name: coverage
     # Only execute coverage stage if we are pushing to master
     if: type = push
@@ -70,25 +71,6 @@ jobs:
         - sudo gem install --no-wrappers --no-document mdl -v ${MDL_VERSION} && sudo gem install --no-wrappers --no-document html-proofer -v ${HTMLPROOFER_VERSION} && sudo gem install --no-wrappers --no-document awesome_bot -v ${AWESOMEBOT_VERSION}
         - make lint
 
-    - stage: test
-      name: Test x86 source
-      os: linux
-      arch: amd64
-      script:
-        - make test
-    - stage: test
-      name: Test ppc64le source
-      os: linux
-      arch: ppc64le
-      script:
-        - make test
-    - stage: test
-      name: Test s390x source
-      os: linux
-      arch: s390x
-      script:
-        - make test
-
     - stage: build
       name: Build x86 binary
       os: linux
@@ -107,6 +89,25 @@ jobs:
       arch: s390x
       script:
         - make build
+
+    - stage: test
+      name: Test x86 source
+      os: linux
+      arch: amd64
+      script:
+        - make test
+    - stage: test
+      name: Test ppc64le source
+      os: linux
+      arch: ppc64le
+      script:
+        - make test
+    - stage: test
+      name: Test s390x source
+      os: linux
+      arch: s390x
+      script:
+        - make test
 
     - stage: coverage
       name: Run the coverage after merge
