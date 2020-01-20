@@ -132,6 +132,7 @@ build:
 
 image: build build-push-image
 
+# as an alternative, you can also config docker in your travis.yaml
 config-docker:
 	@docker login "$(IMAGE_REPO)" -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}"
 
