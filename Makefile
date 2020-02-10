@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-DOCKER_USERNAME ?= ${DOCKER_USERNAME}
-DOCKER_PASSWORD ?= ${DOCKER_PASSWORD}
+# Specify whether this repo is build locally or not, default values is '1';
+# If set to 1, then you need to also set 'DOCKER_USERNAME' and 'DOCKER_PASSWORD'
+# environment variables before build the repo.
+BUILD_LOCALLY ?= 1
 
 # Image URL to use all building/pushing image targets;
 # Use your own docker registry and image name for dev/test by overridding the
@@ -36,7 +38,7 @@ export GOBIN ?= $(GOBIN_DEFAULT)
 TESTARGS_DEFAULT := "-v"
 export TESTARGS ?= $(TESTARGS_DEFAULT)
 DEST := $(GOPATH)/src/$(GIT_HOST)/$(BASE_DIR)
-RELEASE_TAG ?= $(shell git describe --exact-match 2> /dev/null || \
+VERSION ?= $(shell git describe --exact-match 2> /dev/null || \
                  git describe --match=$(git rev-parse --short=8 HEAD) --always --dirty --abbrev=8)
 
 LOCAL_OS := $(shell uname)
@@ -51,20 +53,18 @@ else
 endif
 
 ARCH := $(shell uname -m)
-BUILD_ARCH := "amd64"
+LOCAL_ARCH := "amd64"
 ifeq ($(ARCH),x86_64)
-    BUILD_ARCH="amd64"
+    LOCAL_ARCH="amd64"
 else ifeq ($(ARCH),ppc64le)
-    BUILD_ARCH="ppc64le"
+    LOCAL_ARCH="ppc64le"
 else ifeq ($(ARCH),s390x)
-    BUILD_ARCH="s390x"
+    LOCAL_ARCH="s390x"
 else
     $(error "This system's ARCH $(ARCH) isn't recognized/supported")
 endif
 
-.PHONY: all work fmt check coverage lint test build image build-push-image multiarch-image clean
-
-all: fmt check test coverage build image
+all: fmt check test coverage build images
 
 ifeq (,$(wildcard go.mod))
 ifneq ("$(realpath $(DEST))", "$(realpath $(PWD))")
@@ -73,7 +73,6 @@ endif
 endif
 
 include common/Makefile.common.mk
-
 
 ############################################################
 # work section
@@ -88,10 +87,10 @@ work: $(GOBIN)
 # format section
 ############################################################
 
-# All available format: format-go format-protos format-python
+# All available format: format-go format-python
 # Default value will run all formats, override these make target with your requirements:
 #    eg: fmt: format-go format-protos
-fmt: format-go format-protos format-python
+fmt: format-go format-python
 
 ############################################################
 # check section
@@ -99,7 +98,7 @@ fmt: format-go format-protos format-python
 
 check: lint
 
-# All available linters: lint-dockerfiles lint-scripts lint-yaml lint-copyright-banner lint-go lint-python lint-helm lint-markdown lint-sass lint-typescript lint-protos
+# All available linters: lint-dockerfiles lint-scripts lint-yaml lint-copyright-banner lint-go lint-python lint-helm lint-markdown
 # Default value will run all linters, override these make target with your requirements:
 #    eg: lint: lint-go lint-yaml
 # The MARKDOWN_LINT_WHITELIST variable can be set with comma separated urls you want to whitelist
@@ -117,39 +116,76 @@ test:
 ############################################################
 
 coverage:
-	@common/scripts/codecov.sh
+	@common/scripts/codecov.sh ${BUILD_LOCALLY}
 
 ############################################################
 # build section
 ############################################################
 
-build:
-	@common/scripts/gobuild.sh go-repo-template ./cmd
+build: build-amd64 build-ppc64le build-s390x
+
+build-amd64:
+	@echo "Building the ${IMAGE_NAME} amd64 binary..."
+	@GOARCH=amd64 common/scripts/gobuild.sh build/_output/bin/$(IMAGE_NAME) ./cmd
+
+build-ppc64le:
+	@echo "Building the ${IMAGE_NAME} ppc64le binary..."
+	@GOARCH=ppc64le common/scripts/gobuild.sh build/_output/bin/$(IMAGE_NAME)-ppc64le ./cmd
+
+build-s390x:
+	@echo "Building the ${IMAGE_NAME} s390x binary..."
+	@GOARCH=s390x common/scripts/gobuild.sh build/_output/bin/$(IMAGE_NAME)-s390x ./cmd
 
 ############################################################
 # image section
 ############################################################
 
-image: build build-push-image
+ifeq ($(BUILD_LOCALLY),0)
+    export CONFIG_DOCKER_TARGET = config-docker
+endif
 
-config-docker:
-	@docker login "$(IMAGE_REPO)" -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}"
+image: push-image-amd64 push-image-ppc64le push-image-s390x
 
-build-push-image: config-docker
-	@docker build . -f Dockerfile -t $(IMAGE_REPO)/$(IMAGE_NAME)-$(BUILD_ARCH):$(RELEASE_TAG)
-	@docker tag $(IMAGE_REPO)/$(IMAGE_NAME)-$(BUILD_ARCH):$(RELEASE_TAG) $(IMAGE_REPO)/$(IMAGE_NAME)-$(BUILD_ARCH):latest
-	@docker push $(IMAGE_REPO)/$(IMAGE_NAME)-$(BUILD_ARCH):$(RELEASE_TAG)
-	@docker push $(IMAGE_REPO)/$(IMAGE_NAME)-$(BUILD_ARCH):latest
-	@docker logout "$(IMAGE_REPO)"
+build-image-amd64: build-amd64
+	@docker build -t $(IMAGE_REPO)/$(IMAGE_NAME)-amd64:$(VERSION) -f build/Dockerfile .
+
+build-image-ppc64le: build-ppc64le
+	@docker run --rm --privileged multiarch/qemu-user-static:register --reset
+	@docker build -t $(IMAGE_REPO)/$(IMAGE_NAME)-ppc64le:$(VERSION) -f build/Dockerfile.ppc64le .
+
+build-image-s390x: build-s390x
+	@docker run --rm --privileged multiarch/qemu-user-static:register --reset
+	@docker build -t $(IMAGE_REPO)/$(IMAGE_NAME)-s390x:$(VERSION) -f build/Dockerfile.s390x .
+
+push-image-amd64: $(CONFIG_DOCKER_TARGET) build-image-amd64
+	@docker push $(IMAGE_REPO)/$(IMAGE_NAME)-amd64:$(VERSION)
+
+push-image-ppc64le: $(CONFIG_DOCKER_TARGET) build-image-ppc64le
+	@docker push $(IMAGE_REPO)/$(IMAGE_NAME)-ppc64le:$(VERSION)
+
+push-image-s390x: $(CONFIG_DOCKER_TARGET) build-image-s390x
+	@docker push $(IMAGE_REPO)/$(IMAGE_NAME)-s390x:$(VERSION)
 
 ############################################################
 # multiarch-image section
 ############################################################
 
-multiarch-image: config-docker multi-arch
+images: multiarch-image
+
+multiarch-image: push-image-amd64 push-image-ppc64le push-image-s390x
+ifeq ($(LOCAL_OS),Linux)
+ifeq ($(LOCAL_ARCH),amd64)
+	@curl -L -o /tmp/manifest-tool https://github.com/estesp/manifest-tool/releases/download/v1.0.0/manifest-tool-linux-amd64
+	@chmod +x /tmp/manifest-tool
+	/tmp/manifest-tool push from-args --platforms linux/amd64,linux/ppc64le,linux/s390x --template $(IMAGE_REPO)/$(IMAGE_NAME)-ARCH:$(VERSION) --target $(IMAGE_REPO)/$(IMAGE_NAME) --ignore-missing
+	/tmp/manifest-tool push from-args --platforms linux/amd64,linux/ppc64le,linux/s390x --template $(IMAGE_REPO)/$(IMAGE_NAME)-ARCH:$(VERSION) --target $(IMAGE_REPO)/$(IMAGE_NAME):$(VERSION) --ignore-missing
+endif
+endif
 
 ############################################################
 # clean section
 ############################################################
 clean:
-	@rm -f go-repo-template
+	@rm -rf build/_output
+
+.PHONY: all work fmt check coverage lint test build image images multiarch-image clean
