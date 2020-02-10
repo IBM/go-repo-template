@@ -144,8 +144,6 @@ ifeq ($(BUILD_LOCALLY),0)
     export CONFIG_DOCKER_TARGET = config-docker
 endif
 
-image: push-image-amd64 push-image-ppc64le push-image-s390x
-
 build-image-amd64: build-amd64
 	@docker build -t $(IMAGE_REPO)/$(IMAGE_NAME)-amd64:$(VERSION) -f build/Dockerfile .
 
@@ -170,17 +168,13 @@ push-image-s390x: $(CONFIG_DOCKER_TARGET) build-image-s390x
 # multiarch-image section
 ############################################################
 
-images: multiarch-image
+images: push-image-amd64 push-image-ppc64le push-image-s390x multiarch-image
 
-multiarch-image: push-image-amd64 push-image-ppc64le push-image-s390x
-ifeq ($(LOCAL_OS),Linux)
-ifeq ($(LOCAL_ARCH),amd64)
+multiarch-image:
 	@curl -L -o /tmp/manifest-tool https://github.com/estesp/manifest-tool/releases/download/v1.0.0/manifest-tool-linux-amd64
 	@chmod +x /tmp/manifest-tool
 	/tmp/manifest-tool push from-args --platforms linux/amd64,linux/ppc64le,linux/s390x --template $(IMAGE_REPO)/$(IMAGE_NAME)-ARCH:$(VERSION) --target $(IMAGE_REPO)/$(IMAGE_NAME) --ignore-missing
 	/tmp/manifest-tool push from-args --platforms linux/amd64,linux/ppc64le,linux/s390x --template $(IMAGE_REPO)/$(IMAGE_NAME)-ARCH:$(VERSION) --target $(IMAGE_REPO)/$(IMAGE_NAME):$(VERSION) --ignore-missing
-endif
-endif
 
 ############################################################
 # clean section
