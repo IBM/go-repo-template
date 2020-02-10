@@ -19,6 +19,20 @@ INSTALL_HOOKS := $(shell find .git/hooks -type l -exec rm {} \; && \
                          find common/scripts/.githooks -type f -exec ln -sf ../../{} .git/hooks/ \; )
 
 ############################################################
+# config docker
+############################################################
+activate-serviceaccount:	
+ifdef GOOGLE_APPLICATION_CREDENTIALS	
+	@gcloud auth activate-service-account --key-file="$(GOOGLE_APPLICATION_CREDENTIALS)"	
+endif	
+
+get-cluster-credentials: activate-serviceaccount	
+	@gcloud container clusters get-credentials "$(CLUSTER)" --project="$(PROJECT)" --zone="$(ZONE)"	
+
+config-docker: get-cluster-credentials	
+	@common/scripts/config_docker.sh
+
+############################################################
 # lint section
 ############################################################
 
@@ -56,65 +70,12 @@ else
 	@${FINDFILES} -name '*.md' -print0 | ${XARGS} awesome_bot --skip-save-results --allow_ssl --allow-timeout --allow-dupe --allow-redirect
 endif
 
-# lint-sass:
-# 	@${FINDFILES} -name '*.scss' -print0 | ${XARGS} sass-lint -c common/config/sass-lint.yml --verbose
-
-# lint-typescript:
-# 	@${FINDFILES} -name '*.ts' -print0 | ${XARGS} tslint -c common/config/tslint.json
-
-# lint-protos:
-# 	@$(FINDFILES) -name '*.proto' -print0 | $(XARGS) -L 1 prototool lint --protoc-bin-path=/usr/bin/protoc
-
 lint-all: lint-dockerfiles lint-scripts lint-yaml lint-helm lint-copyright-banner lint-go lint-python lint-markdown
 
-# format-go:
-# 	@${FINDFILES} -name '*.go' \( ! \( -name '*.gen.go' -o -name '*.pb.go' \) \) -print0 | ${XARGS} goimports -w -local "github.com/IBM"
+format-go:
+	@${FINDFILES} -name '*.go' \( ! \( -name '*.gen.go' -o -name '*.pb.go' \) \) -print0 | ${XARGS} goimports -w -local "github.com/IBM"
 
-# format-python:
-# 	@${FINDFILES} -name '*.py' -print0 | ${XARGS} autopep8 --max-line-length 160 --aggressive --aggressive -i
+format-python:
+	@${FINDFILES} -name '*.py' -print0 | ${XARGS} autopep8 --max-line-length 160 --aggressive --aggressive -i
 
-# format-protos:
-# 	@$(FINDFILES) -name '*.proto' -print0 | $(XARGS) -L 1 prototool format -w
-
-.PHONY: lint-dockerfiles lint-scripts lint-yaml lint-helm lint-copyright-banner lint-go lint-python lint-markdown lint-all
-
-############################################################
-# multiarch image section
-############################################################
-MANIFEST_VERSION ?= v1.0.0
-HAS_MANIFEST_TOOL := $(shell command -v manifest-tool)
-
-DEFAULT_PPC64LE_IMAGE ?= ibmcom/pause-ppc64le:3.0
-IMAGE_NAME_PPC64LE ?= ${IMAGE_REPO}/${IMAGE_NAME}-ppc64le:${RELEASE_TAG}
-DEFAULT_S390X_IMAGE ?= ibmcom/pause-s390x:3.0
-IMAGE_NAME_S390X ?= ${IMAGE_REPO}/${IMAGE_NAME}-s390x:${RELEASE_TAG}
-
-manifest-tool:
-ifeq ($(ARCH), x86_64)
-	$(eval MANIFEST_TOOL_NAME = manifest-tool-linux-amd64)
-else
-	$(eval MANIFEST_TOOL_NAME = manifest-tool-linux-$(ARCH))
-endif
-ifndef HAS_MANIFEST_TOOL
-	sudo curl -sSL -o /usr/local/bin/manifest-tool https://github.com/estesp/manifest-tool/releases/download/${MANIFEST_VERSION}/${MANIFEST_TOOL_NAME}
-	sudo chmod +x /usr/local/bin/manifest-tool
-endif
-
-ppc64le-fix: manifest-tool
-	@sudo manifest-tool inspect $(IMAGE_NAME_PPC64LE) \
-		|| (docker pull $(DEFAULT_PPC64LE_IMAGE) \
-		&& docker tag $(DEFAULT_PPC64LE_IMAGE) $(IMAGE_NAME_PPC64LE) \
-		&& docker push $(IMAGE_NAME_PPC64LE))
-
-s390x-fix: manifest-tool
-	@sudo manifest-tool inspect $(IMAGE_NAME_S390X) \
-		|| (docker pull $(DEFAULT_S390X_IMAGE) \
-		&& docker tag $(DEFAULT_S390X_IMAGE) $(IMAGE_NAME_S390X) \
-		&& docker push $(IMAGE_NAME_S390X))
-
-multi-arch: manifest-tool ppc64le-fix s390x-fix
-	@cp ./common/manifest.yaml /tmp/manifest.yaml
-	@sed -i -e "s|__RELEASE_TAG__|$(RELEASE_TAG)|g" -e "s|__IMAGE_NAME__|$(IMAGE_NAME)|g" -e "s|__IMAGE_REPO__|$(IMAGE_REPO)|g" /tmp/manifest.yaml
-	@sudo manifest-tool push from-spec /tmp/manifest.yaml
-
-.PHONY: manifest-tool ppc64le-fix s390x-fix multi-arch
+.PHONY: lint-dockerfiles lint-scripts lint-yaml lint-helm lint-copyright-banner lint-go lint-python lint-markdown lint-all format-go format-python
