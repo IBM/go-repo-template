@@ -14,5 +14,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Launches fmt and lint checks
-make lint-all
+# Check if there are blank character or newline an the end of files.
+exec git diff-tree --check $(git hash-object -t tree /dev/null) HEAD
