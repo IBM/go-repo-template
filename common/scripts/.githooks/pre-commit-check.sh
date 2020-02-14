@@ -15,4 +15,4 @@
 # limitations under the License.
 
 # Check if there are blank character or newline an the end of files.
-exec git diff-tree --check $(git hash-object -t tree /dev/null) HEAD
+exec git diff-tree --check "$(git hash-object -t tree /dev/null)" HEAD
