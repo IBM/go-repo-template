@@ -15,8 +15,9 @@
 ############################################################
 # install git hooks
 ############################################################
-INSTALL_HOOKS := $(shell find .git/hooks -type l -exec rm {} \; && \
-                         find common/scripts/.githooks -type f -exec ln -sf ../../{} .git/hooks/ \; )
+INSTALL_HOOKS:
+	@find .git/hooks -type l -exec rm {} \; && \
+		find common/scripts/.githooks -type f -exec ln -sf ../../{} .git/hooks/ \;
 
 ############################################################
 # config docker
@@ -25,15 +26,15 @@ PROJECT ?= oceanic-guard-191815
 ZONE    ?= us-west1-a
 CLUSTER ?= prow
 
-activate-serviceaccount:	
-ifdef GOOGLE_APPLICATION_CREDENTIALS	
-	@gcloud auth activate-service-account --key-file="$(GOOGLE_APPLICATION_CREDENTIALS)"	
-endif	
+activate-serviceaccount:
+ifdef GOOGLE_APPLICATION_CREDENTIALS
+	@gcloud auth activate-service-account --key-file="$(GOOGLE_APPLICATION_CREDENTIALS)"
+endif
 
-get-cluster-credentials: activate-serviceaccount	
-	@gcloud container clusters get-credentials "$(CLUSTER)" --project="$(PROJECT)" --zone="$(ZONE)"	
+get-cluster-credentials: activate-serviceaccount
+	@gcloud container clusters get-credentials "$(CLUSTER)" --project="$(PROJECT)" --zone="$(ZONE)"
 
-config-docker: get-cluster-credentials	
+config-docker: get-cluster-credentials
 	@common/scripts/config_docker.sh
 
 ############################################################
