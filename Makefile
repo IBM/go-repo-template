@@ -150,7 +150,7 @@ push-image: $(CONFIG_DOCKER_TARGET) build-image
 # multiarch-image section
 ############################################################
 
-multiarch-image:
+multiarch-image: $(CONFIG_DOCKER_TARGET)
 	@common/scripts/multiarch_image.sh $(IMAGE_REPO) $(IMAGE_NAME) $(VERSION)
 
 ############################################################
