@@ -47,5 +47,5 @@ curl -L -o /tmp/manifest-tool https://github.com/estesp/manifest-tool/releases/d
 chmod +x /tmp/manifest-tool
 
 echo "Trying to build multiarch image for '${IMAGE_REPO}'/'${IMAGE_NAME}':'${VERSION}'..."
-/tmp/manifest-tool push from-args --platforms linux/amd64,linux/ppc64le,linux/s390x --template "$(IMAGE_REPO)"/"$(IMAGE_NAME)"-ARCH:"$(VERSION)" --target "$(IMAGE_REPO)"/"$(IMAGE_NAME)"
-/tmp/manifest-tool push from-args --platforms linux/amd64,linux/ppc64le,linux/s390x --template "$(IMAGE_REPO)"/"$(IMAGE_NAME)"-ARCH:"$(VERSION)" --target "$(IMAGE_REPO)"/"$(IMAGE_NAME)":"$(VERSION)"
+/tmp/manifest-tool push from-args --platforms linux/amd64,linux/ppc64le,linux/s390x --template "${IMAGE_REPO}"/"${IMAGE_NAME}"-ARCH:"${VERSION}" --target "${IMAGE_REPO}"/"${IMAGE_NAME}"
+/tmp/manifest-tool push from-args --platforms linux/amd64,linux/ppc64le,linux/s390x --template "${IMAGE_REPO}"/"${IMAGE_NAME}"-ARCH:"${VERSION}" --target "${IMAGE_REPO}"/"${IMAGE_NAME}":"${VERSION}"
