@@ -15,10 +15,9 @@
 # limitations under the License.
 #
 
-# This script build and push multiarch(amd64, ppc64le and s390x) image for the one specified by 
+# This script build and push multiarch(amd64, ppc64le and s390x) image for the one specified by
 # IMAGE_REPO, IMAGE_NAME and VERSION.
 # It assumes the specified image for each platform is already pushed into corresponding docker registry.
-
 
 ALL_PLATFORMS="amd64 ppc64le s390x"
 
@@ -31,7 +30,7 @@ RETRY_INTERVAL=${RETRY_INTERVAL-10}
 
 for arch in ${ALL_PLATFORMS};
 do
-    for i in $(seq 1 ${MAX_PULLING_RETRY};
+    for i in $(seq 1 ${MAX_PULLING_RETRY});
     do
         echo "Trying to pull image ${IMAGE_REPO}/${IMAGE_NAME}-${arch}:${VERSION}..."
         docker pull ${IMAGE_REPO}/${IMAGE_NAME}-${arch}:${VERSION} && break
