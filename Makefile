@@ -24,6 +24,9 @@ BUILD_LOCALLY ?= 1
 IMAGE_REPO ?= quay.io/multicloudlab
 IMAGE_NAME ?= go-repo-template
 
+# Maximum retry times of pulling image for each platform before makeing multi-arch image
+MAX_PULLING_RETRY ? = 10
+
 # Github host to use for checking the source tree;
 # Override this variable ue with your own value if you're working on forked repo.
 GIT_HOST ?= github.com/IBM
@@ -110,32 +113,23 @@ lint: lint-all
 ############################################################
 
 test:
-	@go test ${TESTARGS} ./...
+    @echo "Building the $(IMAGE_NAME) $(LOCAL_OS) binary..."
+	@go test $(TESTARGS) ./...
 
 ############################################################
 # coverage section
 ############################################################
 
 coverage:
-	@common/scripts/codecov.sh ${BUILD_LOCALLY}
+	@common/scripts/codecov.sh $(BUILD_LOCALLY)
 
 ############################################################
 # build section
 ############################################################
 
-build: build-amd64 build-ppc64le build-s390x
-
-build-amd64:
-	@echo "Building the ${IMAGE_NAME} amd64 binary..."
-	@GOARCH=amd64 common/scripts/gobuild.sh build/_output/bin/$(IMAGE_NAME) ./cmd
-
-build-ppc64le:
-	@echo "Building the ${IMAGE_NAME} ppc64le binary..."
-	@GOARCH=ppc64le common/scripts/gobuild.sh build/_output/bin/$(IMAGE_NAME)-ppc64le ./cmd
-
-build-s390x:
-	@echo "Building the ${IMAGE_NAME} s390x binary..."
-	@GOARCH=s390x common/scripts/gobuild.sh build/_output/bin/$(IMAGE_NAME)-s390x ./cmd
+build:
+	@echo "Building the $(IMAGE_NAME) binary for $(LOCAL_OS)..."
+	@common/scripts/gobuild.sh build/_output/bin/$(IMAGE_NAME) ./cmd
 
 ############################################################
 # image section
@@ -145,37 +139,37 @@ ifeq ($(BUILD_LOCALLY),0)
     export CONFIG_DOCKER_TARGET = config-docker
 endif
 
-build-image-amd64: build-amd64
-	@docker build -t $(IMAGE_REPO)/$(IMAGE_NAME)-amd64:$(VERSION) -f build/Dockerfile .
+build-push-image: build-image push-image
 
-build-image-ppc64le: build-ppc64le
-	@docker run --rm --privileged multiarch/qemu-user-static:register --reset
-	@docker build -t $(IMAGE_REPO)/$(IMAGE_NAME)-ppc64le:$(VERSION) -f build/Dockerfile.ppc64le .
+build-image: build
+	@echo "Building the $(IMAGE_NAME) docker image for $(LOCAL_OS)..."
+	@docker build -t $(IMAGE_REPO)/$(IMAGE_NAME)-$(LOCAL_OS):$(VERSION) -f build/Dockerfile-$(LOCAL_OS) .
 
-build-image-s390x: build-s390x
-	@docker run --rm --privileged multiarch/qemu-user-static:register --reset
-	@docker build -t $(IMAGE_REPO)/$(IMAGE_NAME)-s390x:$(VERSION) -f build/Dockerfile.s390x .
-
-push-image-amd64: $(CONFIG_DOCKER_TARGET) build-image-amd64
-	@docker push $(IMAGE_REPO)/$(IMAGE_NAME)-amd64:$(VERSION)
-
-push-image-ppc64le: $(CONFIG_DOCKER_TARGET) build-image-ppc64le
-	@docker push $(IMAGE_REPO)/$(IMAGE_NAME)-ppc64le:$(VERSION)
-
-push-image-s390x: $(CONFIG_DOCKER_TARGET) build-image-s390x
-	@docker push $(IMAGE_REPO)/$(IMAGE_NAME)-s390x:$(VERSION)
+push-image: $(CONFIG_DOCKER_TARGET) build-image
+	@echo "Pushing the $(IMAGE_NAME) docker image for $(LOCAL_OS)..."
+	@docker push $(IMAGE_REPO)/$(IMAGE_NAME)-$(LOCAL_OS):$(VERSION)
 
 ############################################################
 # multiarch-image section
 ############################################################
 
-images: push-image-amd64 push-image-ppc64le push-image-s390x multiarch-image
+pull-image-amd64:
+	@echo "Trying to pull the $(IMAGE_NAME) docker image for amd64...""
+	@for i in $(seq 1 $(MAX_PULLING_RETRY); do docker pull $(IMAGE_REPO)/$(IMAGE_NAME)-amd64:$(VERSION) && echo "Pull $(IMAGE_REPO)/$(IMAGE_NAME)-amd64:$(VERSION) image" && break; sleep 10; done
 
-multiarch-image:
+pull-image-ppc64le:
+	@echo "Trying to pull the $(IMAGE_NAME) docker image for ppc64le...""
+	@for i in $(seq 1 $(MAX_PULLING_RETRY); do docker pull $(IMAGE_REPO)/$(IMAGE_NAME)-ppc64le:$(VERSION) && echo "Pull $(IMAGE_REPO)/$(IMAGE_NAME)-ppc64le:$(VERSION) image" && break; sleep 10; done
+
+pull-image-s390x:
+	@echo "Trying to pull the $(IMAGE_NAME) docker image for s390x...""
+	@for i in $(seq 1 $(MAX_PULLING_RETRY); do docker pull $(IMAGE_REPO)/$(IMAGE_NAME)-s390x:$(VERSION) && echo "Pull $(IMAGE_REPO)/$(IMAGE_NAME)-s390x:$(VERSION) image" && break; sleep 10; done
+
+multiarch-image: pull-image-amd64 pull-image-ppc64le pull-image-s390x
 	@curl -L -o /tmp/manifest-tool https://github.com/estesp/manifest-tool/releases/download/v1.0.0/manifest-tool-linux-amd64
 	@chmod +x /tmp/manifest-tool
-	/tmp/manifest-tool push from-args --platforms linux/amd64,linux/ppc64le,linux/s390x --template $(IMAGE_REPO)/$(IMAGE_NAME)-ARCH:$(VERSION) --target $(IMAGE_REPO)/$(IMAGE_NAME) --ignore-missing
-	/tmp/manifest-tool push from-args --platforms linux/amd64,linux/ppc64le,linux/s390x --template $(IMAGE_REPO)/$(IMAGE_NAME)-ARCH:$(VERSION) --target $(IMAGE_REPO)/$(IMAGE_NAME):$(VERSION) --ignore-missing
+	@/tmp/manifest-tool push from-args --platforms linux/amd64,linux/ppc64le,linux/s390x --template $(IMAGE_REPO)/$(IMAGE_NAME)-ARCH:$(VERSION) --target $(IMAGE_REPO)/$(IMAGE_NAME)
+	@/tmp/manifest-tool push from-args --platforms linux/amd64,linux/ppc64le,linux/s390x --template $(IMAGE_REPO)/$(IMAGE_NAME)-ARCH:$(VERSION) --target $(IMAGE_REPO)/$(IMAGE_NAME):$(VERSION)
 
 ############################################################
 # clean section
@@ -183,4 +177,4 @@ multiarch-image:
 clean:
 	@rm -rf build/_output
 
-.PHONY: all work fmt check coverage lint test build image images multiarch-image clean
+.PHONY: all work fmt check coverage lint test build build-push-image multiarch-image clean
