@@ -28,15 +28,15 @@ VERSION=${3-latest}
 MAX_PULLING_RETRY=${MAX_PULLING_RETRY-10}
 RETRY_INTERVAL=${RETRY_INTERVAL-10}
 
-for arch in ${ALL_PLATFORMS};
+for arch in ${ALL_PLATFORMS}
 do
-    for i in $(seq 1 ${MAX_PULLING_RETRY});
+    for i in $(seq 1 "${MAX_PULLING_RETRY}")
     do
-        echo "Trying to pull image ${IMAGE_REPO}/${IMAGE_NAME}-${arch}:${VERSION}..."
-        docker pull ${IMAGE_REPO}/${IMAGE_NAME}-${arch}:${VERSION} && break
-        sleep ${RETRY_INTERVAL}
-        if [ ${i} -eq ${MAX_PULLING_RETRY} ]; then
-            echo "Failed to pull image ${IMAGE_REPO}/${IMAGE_NAME}-${arch}:${VERSION}!!!"
+        echo "Trying to pull image '${IMAGE_REPO}'/'${IMAGE_NAME}'-'${arch}':'${VERSION}'..."
+        docker pull "${IMAGE_REPO}"/"${IMAGE_NAME}"-"${arch}":"${VERSION}" && break
+        sleep "${RETRY_INTERVAL}"
+        if [ "${i}" -eq "${MAX_PULLING_RETRY}" ]; then
+            echo "Failed to pull image '${IMAGE_REPO}'/'${IMAGE_NAME}'-'${arch}':'${VERSION}'!!!"
             exit 1
         fi
     done
@@ -46,6 +46,6 @@ echo "Trying to download and install manifest-tool..."
 curl -L -o /tmp/manifest-tool https://github.com/estesp/manifest-tool/releases/download/v1.0.0/manifest-tool-linux-amd64
 chmod +x /tmp/manifest-tool
 
-echo "Trying to build multiarch image for ${IMAGE_REPO}/${IMAGE_NAME}:${VERSION}..."
-/tmp/manifest-tool push from-args --platforms linux/amd64,linux/ppc64le,linux/s390x --template $(IMAGE_REPO)/$(IMAGE_NAME)-ARCH:$(VERSION) --target $(IMAGE_REPO)/$(IMAGE_NAME)
-/tmp/manifest-tool push from-args --platforms linux/amd64,linux/ppc64le,linux/s390x --template $(IMAGE_REPO)/$(IMAGE_NAME)-ARCH:$(VERSION) --target $(IMAGE_REPO)/$(IMAGE_NAME):$(VERSION)
+echo "Trying to build multiarch image for '${IMAGE_REPO}'/'${IMAGE_NAME}':'${VERSION}'..."
+/tmp/manifest-tool push from-args --platforms linux/amd64,linux/ppc64le,linux/s390x --template "$(IMAGE_REPO)"/"$(IMAGE_NAME)"-ARCH:"$(VERSION)" --target "$(IMAGE_REPO)"/"$(IMAGE_NAME)"
+/tmp/manifest-tool push from-args --platforms linux/amd64,linux/ppc64le,linux/s390x --template "$(IMAGE_REPO)"/"$(IMAGE_NAME)"-ARCH:"$(VERSION)" --target "$(IMAGE_REPO)"/"$(IMAGE_NAME)":"$(VERSION)"
