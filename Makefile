@@ -25,7 +25,7 @@ IMAGE_REPO ?= quay.io/multicloudlab
 IMAGE_NAME ?= go-repo-template
 
 # Maximum retry times of pulling image for each platform before makeing multi-arch image
-MAX_PULLING_RETRY ? = 10
+MAX_PULLING_RETRY ?= 10
 
 # Github host to use for checking the source tree;
 # Override this variable ue with your own value if you're working on forked repo.
@@ -113,7 +113,7 @@ lint: lint-all
 ############################################################
 
 test:
-    @echo "Building the $(IMAGE_NAME) $(LOCAL_OS) binary..."
+	@echo "Running the tests for $(IMAGE_NAME) on $(LOCAL_OS)..."
 	@go test $(TESTARGS) ./...
 
 ############################################################
