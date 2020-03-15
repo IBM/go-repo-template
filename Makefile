@@ -24,9 +24,6 @@ BUILD_LOCALLY ?= 1
 IMAGE_REPO ?= quay.io/multicloudlab
 IMAGE_NAME ?= go-repo-template
 
-# Maximum retry times of pulling image for each platform before makeing multi-arch image
-MAX_PULLING_RETRY ?= 10
-
 # Github host to use for checking the source tree;
 # Override this variable ue with your own value if you're working on forked repo.
 GIT_HOST ?= github.com/IBM
@@ -113,7 +110,7 @@ lint: lint-all
 ############################################################
 
 test:
-	@echo "Running the tests for $(IMAGE_NAME) on $(LOCAL_OS)..."
+	@echo "Running the tests for $(IMAGE_NAME) on $(LOCAL_ARCH)..."
 	@go test $(TESTARGS) ./...
 
 ############################################################
@@ -128,7 +125,7 @@ coverage:
 ############################################################
 
 build:
-	@echo "Building the $(IMAGE_NAME) binary for $(LOCAL_OS)..."
+	@echo "Building the $(IMAGE_NAME) binary for $(LOCAL_ARCH)..."
 	@common/scripts/gobuild.sh build/_output/bin/$(IMAGE_NAME) ./cmd
 
 ############################################################
@@ -142,34 +139,19 @@ endif
 build-push-image: build-image push-image
 
 build-image: build
-	@echo "Building the $(IMAGE_NAME) docker image for $(LOCAL_OS)..."
-	@docker build -t $(IMAGE_REPO)/$(IMAGE_NAME)-$(LOCAL_OS):$(VERSION) -f build/Dockerfile-$(LOCAL_OS) .
+	@echo "Building the $(IMAGE_NAME) docker image for $(LOCAL_ARCH)..."
+	@docker build -t $(IMAGE_REPO)/$(IMAGE_NAME)-$(LOCAL_ARCH):$(VERSION) -f build/Dockerfile-$(LOCAL_ARCH) .
 
 push-image: $(CONFIG_DOCKER_TARGET) build-image
-	@echo "Pushing the $(IMAGE_NAME) docker image for $(LOCAL_OS)..."
-	@docker push $(IMAGE_REPO)/$(IMAGE_NAME)-$(LOCAL_OS):$(VERSION)
+	@echo "Pushing the $(IMAGE_NAME) docker image for $(LOCAL_ARCH)..."
+	@docker push $(IMAGE_REPO)/$(IMAGE_NAME)-$(LOCAL_ARCH):$(VERSION)
 
 ############################################################
 # multiarch-image section
 ############################################################
 
-pull-image-amd64:
-	@echo "Trying to pull the $(IMAGE_NAME) docker image for amd64...""
-	@for i in $(seq 1 $(MAX_PULLING_RETRY); do docker pull $(IMAGE_REPO)/$(IMAGE_NAME)-amd64:$(VERSION) && echo "Pull $(IMAGE_REPO)/$(IMAGE_NAME)-amd64:$(VERSION) image" && break; sleep 10; done
-
-pull-image-ppc64le:
-	@echo "Trying to pull the $(IMAGE_NAME) docker image for ppc64le...""
-	@for i in $(seq 1 $(MAX_PULLING_RETRY); do docker pull $(IMAGE_REPO)/$(IMAGE_NAME)-ppc64le:$(VERSION) && echo "Pull $(IMAGE_REPO)/$(IMAGE_NAME)-ppc64le:$(VERSION) image" && break; sleep 10; done
-
-pull-image-s390x:
-	@echo "Trying to pull the $(IMAGE_NAME) docker image for s390x...""
-	@for i in $(seq 1 $(MAX_PULLING_RETRY); do docker pull $(IMAGE_REPO)/$(IMAGE_NAME)-s390x:$(VERSION) && echo "Pull $(IMAGE_REPO)/$(IMAGE_NAME)-s390x:$(VERSION) image" && break; sleep 10; done
-
-multiarch-image: pull-image-amd64 pull-image-ppc64le pull-image-s390x
-	@curl -L -o /tmp/manifest-tool https://github.com/estesp/manifest-tool/releases/download/v1.0.0/manifest-tool-linux-amd64
-	@chmod +x /tmp/manifest-tool
-	@/tmp/manifest-tool push from-args --platforms linux/amd64,linux/ppc64le,linux/s390x --template $(IMAGE_REPO)/$(IMAGE_NAME)-ARCH:$(VERSION) --target $(IMAGE_REPO)/$(IMAGE_NAME)
-	@/tmp/manifest-tool push from-args --platforms linux/amd64,linux/ppc64le,linux/s390x --template $(IMAGE_REPO)/$(IMAGE_NAME)-ARCH:$(VERSION) --target $(IMAGE_REPO)/$(IMAGE_NAME):$(VERSION)
+multiarch-image:
+	@common/scripts/multiarch_image.sh $(IMAGE_REPO) $(IMAGE_NAME) $(VERSION)
 
 ############################################################
 # clean section
