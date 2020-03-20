@@ -125,7 +125,7 @@ coverage:
 
 build:
 	@echo "Building the $(IMAGE_NAME) binary for $(LOCAL_ARCH)..."
-	@common/scripts/gobuild.sh build/_output/bin/$(IMAGE_NAME) ./cmd
+	@GOARCH=$(LOCAL_ARCH) common/scripts/gobuild.sh build/_output/bin/$(IMAGE_NAME) ./cmd
 
 ############################################################
 # image section
