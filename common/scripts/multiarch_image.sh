@@ -25,6 +25,9 @@ IMAGE_REPO=${1}
 IMAGE_NAME=${2}
 VERSION=${3-"$(date +v%Y%m%d)-$(git describe --tags --always --dirty)"}
 
+# support other container tools, e.g. podman
+CONTAINER_CLI=${CONTAINER_CLI:-docker}
+
 MAX_PULLING_RETRY=${MAX_PULLING_RETRY-10}
 RETRY_INTERVAL=${RETRY_INTERVAL-10}
 
@@ -35,7 +38,7 @@ do
     for i in $(seq 1 "${MAX_PULLING_RETRY}")
     do
         echo "Trying to pull image '${IMAGE_REPO}'/'${IMAGE_NAME}'-'${arch}':'${VERSION}'..."
-        docker pull "${IMAGE_REPO}"/"${IMAGE_NAME}"-"${arch}":"${VERSION}" && break
+        ${CONTAINER_CLI} pull "${IMAGE_REPO}"/"${IMAGE_NAME}"-"${arch}":"${VERSION}" && break
         sleep "${RETRY_INTERVAL}"
         if [ "${i}" -eq "${MAX_PULLING_RETRY}" ]; then
             echo "Failed to pull image '${IMAGE_REPO}'/'${IMAGE_NAME}'-'${arch}':'${VERSION}'!!!"
@@ -43,9 +46,6 @@ do
         fi
     done
 done
-
-# support other container tools, e.g. podman
-CONTAINER_CLI=${CONTAINER_CLI:-docker}
 
 # create multi-arch manifest
 echo "Creating the multi-arch image manifest for '${IMAGE_REPO}'/'${IMAGE_NAME}':'${VERSION}'..."
