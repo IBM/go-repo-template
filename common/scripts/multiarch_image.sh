@@ -28,8 +28,8 @@ VERSION=${3-"$(date +v%Y%m%d)-$(git describe --tags --always --dirty)"}
 # support other container tools, e.g. podman
 CONTAINER_CLI=${CONTAINER_CLI:-docker}
 
-MAX_PULLING_RETRY=${MAX_PULLING_RETRY-10}
-RETRY_INTERVAL=${RETRY_INTERVAL-10}
+MAX_PULLING_RETRY=${MAX_PULLING_RETRY-20}
+RETRY_INTERVAL=${RETRY_INTERVAL-30}
 
 # Loop until the image for each single platform is ready in the docker registry.
 # TODO: remove this if prow job support dependency.
