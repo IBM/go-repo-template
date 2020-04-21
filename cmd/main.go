@@ -23,5 +23,6 @@ import (
 )
 
 func main() {
+	fmt.Println("Hello, go-repo-template!")
 	fmt.Println(stringutil.Reverse("!etalpmet-oper-og ,olleH"))
 }
