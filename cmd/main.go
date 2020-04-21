@@ -25,4 +25,5 @@ import (
 func main() {
 	fmt.Println("Hello, go-repo-template!")
 	fmt.Println(stringutil.Reverse("!etalpmet-oper-og ,olleH"))
+	fmt.Printf("racecar is palindromic: %t\n", stringutil.IsPalindromic("racecar"))
 }
