@@ -12,7 +12,7 @@
     - [Community, discussion, contribution, and support](#community-discussion-contribution-and-support)
     - [Getting Started](#getting-started)
         - [Prerequisites](#prerequisites)
-        - [XXXXX](#xxxxx)
+        - [XXX](#xxx)
         - [Trouble shooting](#trouble-shooting)
     - [XXX References](#xxx-references)
 
