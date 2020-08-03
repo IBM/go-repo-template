@@ -21,7 +21,7 @@ BUILD_LOCALLY ?= 1
 # Image URL to use all building/pushing image targets;
 # Use your own docker registry and image name for dev/test by overridding the
 # IMAGE_REPO, IMAGE_NAME and RELEASE_TAG environment variable.
-IMAGE_REPO ?= quay.io/multicloudlab
+IMAGE_REPO ?= hyc-cloud-private-scratch-docker-local.artifactory.swg-devops.com/ibmcom
 IMAGE_NAME ?= go-repo-template
 
 # Github host to use for checking the source tree;
@@ -150,7 +150,8 @@ push-image: $(CONFIG_DOCKER_TARGET) build-image
 ############################################################
 
 multiarch-image: $(CONFIG_DOCKER_TARGET)
-	@common/scripts/multiarch_image.sh $(IMAGE_REPO) $(IMAGE_NAME) $(VERSION)
+	@echo "Do nothing for artifactory..."
+	# @common/scripts/multiarch_image.sh $(IMAGE_REPO) $(IMAGE_NAME) $(VERSION)
 
 ############################################################
 # clean section
