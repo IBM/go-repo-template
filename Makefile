@@ -97,6 +97,7 @@ fmt: format-go format-python
 ############################################################
 
 check: lint
+	@go version
 
 # All available linters: lint-dockerfiles lint-scripts lint-yaml lint-copyright-banner lint-go lint-python lint-helm lint-markdown
 # Default value will run all linters, override these make target with your requirements:
@@ -111,6 +112,15 @@ lint: lint-all
 test:
 	@echo "Running the tests for $(IMAGE_NAME) on $(LOCAL_ARCH)..."
 	@go test $(TESTARGS) ./...
+	@go version
+	@kubectl version --client=true
+	@operator-sdk version
+	@ls -al /usr/local
+	@ls -al /usr/local/kubebuilder/bin
+	@ls -al /usr/bin
+	@kustomize version
+	@controller-gen --version
+	@kubebuilder version
 
 ############################################################
 # coverage section
